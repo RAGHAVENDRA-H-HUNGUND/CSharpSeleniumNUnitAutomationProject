@@ -1,0 +1,36 @@
+name: CI - C# Selenium NUnit Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'  # or 7.0.x / 6.0.x depending on your project
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build the solution
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run NUnit Tests
+        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.trx"
+
+      # Optional: Upload test results to GitHub Actions
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
