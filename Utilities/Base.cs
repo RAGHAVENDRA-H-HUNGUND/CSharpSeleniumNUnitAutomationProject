@@ -37,7 +37,7 @@ namespace CSharpSeleniumNUnitAutomationProject.Utilities
             // Start the ExtentTest for the current test
             test = extent.CreateTest(TestContext.CurrentContext.Test.Name);
             
-            string browserName = TestContext.Parameters["browserName"];
+            string browserName = TestContext.Parameters["browserName"]!;
             if (string.IsNullOrEmpty(browserName))
             {
                 //browserName = ConfigurationManager.AppSettings["browser"];
@@ -140,7 +140,7 @@ namespace CSharpSeleniumNUnitAutomationProject.Utilities
                     test.Skip("Test Skipped").Log(Status.Skip, errorMessage);
                     break;
                 case TestStatus.Passed:
-                    test.Pass("Test Passed");
+                    test.Pass("Test Passed", CaptureScreenshot(driver.Value!, fileName));
                     break;
                 default:
                     test.Info("Test Finished with no specific status.");

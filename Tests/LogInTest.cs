@@ -13,11 +13,11 @@ namespace CSharpSeleniumNUnitAutomationProject.Tests
         [Test]
         public void LogInTest()
         {
-            LogInPage logInPage = new LogInPage(driver.Value);
+            LogInPage logInPage = new LogInPage(driver.Value!);
             logInPage.SendDataToUserNameField("Admin");
             logInPage.SendDataToPasswordField("admin123");
             logInPage.ClickLogIn();
-            Assert.IsTrue(driver.Value.Url.Contains("dashboard"));            
+            Assert.IsTrue(driver.Value!.Url.Contains("dashboard"));            
 
             Thread.Sleep(5000);
         }
@@ -25,7 +25,7 @@ namespace CSharpSeleniumNUnitAutomationProject.Tests
         [Test]
         public void LogInWithEmptyUserNameTest()
         {
-            LogInPage logInPage = new LogInPage(driver.Value);
+            LogInPage logInPage = new LogInPage(driver.Value!);
             logInPage.SendDataToUserNameField("");
             logInPage.SendDataToPasswordField("admin123");
             logInPage.ClickLogIn();
