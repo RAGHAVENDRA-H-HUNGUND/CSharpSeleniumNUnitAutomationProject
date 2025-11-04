@@ -11,11 +11,11 @@ namespace CSharpSeleniumNUnitAutomationProject.Tests
         }
 
         [Test]
-        public void Test1()
+        public void LogInTest()
         {
             LogInPage logInPage = new LogInPage(driver.Value);
             logInPage.SendDataToUserNameField("Admin");
-            logInPage.SendDataToPasswordField("admin1234");
+            logInPage.SendDataToPasswordField("admin123");
             logInPage.ClickLogIn();
             Assert.IsTrue(driver.Value.Url.Contains("dashboard"));            
 
@@ -29,8 +29,7 @@ namespace CSharpSeleniumNUnitAutomationProject.Tests
             logInPage.SendDataToUserNameField("");
             logInPage.SendDataToPasswordField("admin123");
             logInPage.ClickLogIn();
-            Assert.That(logInPage.UsernameRequiredFieldMsg.Text, Is.EqualTo("Required"));
-            //pageLogin.AssertionWithActualExpectedResult(pageLogin.UsernameRequiredFieldMsg.Text, expectedResult);
+            Assert.That(logInPage.UsernameRequiredFieldMsg.Text, Is.EqualTo("Required"));            
         }
     }
 }
