@@ -1,21 +1,11 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
-using RazorEngine.Compilation.ImpromptuInterface.Dynamic;
 
 namespace CSharpSeleniumNUnitAutomationProject.PageObjects
 {
     public class LogInPage
     {
-        //private IWebDriver _driver;
-        //private readonly WebDriverWait wait;
-
-        //// Define elements using direct initialization
-        //private readonly IWebElement userName;
-        //private readonly IWebElement password;
-        //private readonly IWebElement loginBtn;
-        //private readonly IWebElement requiredFieldMsgForUserName;
-        //private readonly IWebElement requiredFieldMsgForPassword;
-        //private readonly IWebElement invalidCredentialsMsg;
+        
         private IWebDriver _driver;
         private readonly WebDriverWait wait;
 
@@ -52,9 +42,6 @@ namespace CSharpSeleniumNUnitAutomationProject.PageObjects
             //userName = driver.FindElement(By.Name("username"));
             //password = driver.FindElement(By.Name("password"));
             //loginBtn = driver.FindElement(By.XPath("//button[@type='submit']"));
-            //requiredFieldMsgForPassword = driver.FindElement(By.XPath("//*[@name='password']/following::span"));
-            //requiredFieldMsgForUserName = driver.FindElement(By.XPath("//*[@name='username']/following::span"));
-            //invalidCredentialsMsg = driver.FindElement(By.XPath("//*[text()='Invalid credentials']"));
         }
 
         public void SendDataToUserNameField(string text)
@@ -77,26 +64,6 @@ namespace CSharpSeleniumNUnitAutomationProject.PageObjects
         {
             wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(Loginbtn));
             Loginbtn.Click();
-        }
-
-        public void UserNameRequiredFieldMsgDisplay()
-        {
-            wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible((By)UsernameRequiredFieldMsg));
-            Assert.That(UsernameRequiredFieldMsg.Text, Is.EqualTo("Required"));
-        }
-
-        public void PasswordRequiredFieldMsgDisplay()
-        {
-            wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible((By)PasswordRequiredFieldMsg));
-            Assert.That(PasswordRequiredFieldMsg.Text, Is.EqualTo("Required"));
-
-        }
-
-        public void InvalidCredentialsMsgDisplay()
-        {
-            wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible((By)InvalidCredential));
-            Assert.That(InvalidCredential.Text, Is.EqualTo("Invalid credentials"));
-
         }
     }
 }

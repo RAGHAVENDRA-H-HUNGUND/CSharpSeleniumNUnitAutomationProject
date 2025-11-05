@@ -1,19 +1,14 @@
 ﻿using AventStack.ExtentReports;
-using AventStack.ExtentReports.Model;
 using AventStack.ExtentReports.Reporter;
 using AventStack.ExtentReports.Reporter.Config;
+using CSharpSeleniumNUnitAutomationProject.TestData;
 using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
-using System.Configuration;
 using WebDriverManager.DriverConfigs.Impl;
-using NUnit.Framework;
-using System;
-using System.IO;
-using System.Threading;
 
 namespace CSharpSeleniumNUnitAutomationProject.Utilities
 {
@@ -22,64 +17,47 @@ namespace CSharpSeleniumNUnitAutomationProject.Utilities
         public ThreadLocal<IWebDriver> driver = new();
         protected WebDriverWait? wait;
         public ExtentReports extent;
-        protected ExtentTest test;
+        protected ThreadLocal<ExtentTest> test = new();
+        private BrowserType _browser = BrowserType.Chrome;
+        public string excelPath;
+        public List<Dictionary<string, string>> testData;
 
         [SetUp]
-        public void StartBrowser()
+        public void BeforeTest()
         {
-            //string? browserName = ConfigurationManager.AppSettings["browser"];
-            //string? baseUrl = ConfigurationManager.AppSettings["baseUrl"];
-
-            //if (string.IsNullOrEmpty(browserName))
-            //{
-            //    throw new ArgumentNullException("Browser name is not specified in App.config");
-            //}
             // Start the ExtentTest for the current test
-            test = extent.CreateTest(TestContext.CurrentContext.Test.Name);
+            test.Value = extent.CreateTest(TestContext.CurrentContext.Test.Name);
+            string baseDirectory = TestContext.CurrentContext.TestDirectory;
+            excelPath = Path.Combine(baseDirectory, "TestData", "TestData.xlsx");
+            testData = ExcelReader.ReadExcel(excelPath, "LoginData");
             
-            string browserName = TestContext.Parameters["browserName"]!;
-            if (string.IsNullOrEmpty(browserName))
-            {
-                //browserName = ConfigurationManager.AppSettings["browser"];
-                browserName = "Chrome";
-            }
-
-            string baseUrl = /*ConfigurationManager.AppSettings["baseUrl"];*/"https://opensource-demo.orangehrmlive.com/web/index.php/auth/login";
-
-            if (string.IsNullOrEmpty(browserName))
-            {
-                throw new ArgumentNullException("Browser name is not specified in App.config");
-            }
-
-            InitBrowser(browserName);
+            InitBrowser(_browser);
 
             if (driver.Value != null)
             {
                 driver.Value.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
                 driver.Value.Manage().Window.Maximize();
-                driver.Value.Navigate().GoToUrl(baseUrl!);
+                driver.Value.Navigate().GoToUrl(ConfigurationManager.BaseUrl);
 
                 // Initialize WebDriverWait
                 wait = new WebDriverWait(driver.Value, TimeSpan.FromSeconds(10));
             }
         }
 
-        private IWebDriver GetDriver() => driver.Value!;
-
-        private void InitBrowser(string browserName)
+        private void InitBrowser(BrowserType browser)
         {
-            switch (browserName)
+            switch (browser)
             {
-                case "Firefox":
+                case BrowserType.Firefox:
                     new WebDriverManager.DriverManager().SetUpDriver(new FirefoxConfig());                    
                     driver.Value = new FirefoxDriver();
                     break;
-                case "Chrome":
+                case BrowserType.Chrome:
                     var chromeOptions = new ChromeOptions();
                     var chromeDriverService = ChromeDriverService.CreateDefaultService();
                     driver.Value = new ChromeDriver(chromeDriverService, chromeOptions, TimeSpan.FromMinutes(3));
                     break;
-                case "Edge":
+                case BrowserType.Edge:
                     var edgeOptions = new EdgeOptions();
                     var edgeDriverService = EdgeDriverService.CreateDefaultService();
                     driver.Value = new EdgeDriver(edgeDriverService, edgeOptions, TimeSpan.FromMinutes(3));
@@ -102,16 +80,15 @@ namespace CSharpSeleniumNUnitAutomationProject.Utilities
 
             string projectDirectory = Directory.GetParent(workingDirectory)!.Parent!.Parent!.FullName;
             string reportPath = projectDirectory + "//index.html";
-            //Path.Combine(projectDirectory, "index.html");
-
-            //var htmlReporter = new ExtentHtmlReporter(reportPath);
+            
             var htmlReporter = new ExtentSparkReporter(reportPath);
             extent = new ExtentReports();
             extent.AttachReporter(htmlReporter);
             extent.AddSystemInfo("Host Name", "localhost");
             extent.AddSystemInfo("Environment", "QA");
+            extent.AddSystemInfo("User", "Tester");
             htmlReporter.Config.DocumentTitle = "Automation Test Report";
-            htmlReporter.Config.ReportName = "OrangeHRM LogIN Page Test Report";
+            htmlReporter.Config.ReportName = "OrangeHRM " + TestContext.CurrentContext.Test.Name + " Report";
             htmlReporter.Config.Theme = Theme.Dark;
         }
 
@@ -125,50 +102,32 @@ namespace CSharpSeleniumNUnitAutomationProject.Utilities
             var stacktrace = string.IsNullOrEmpty(TestContext.CurrentContext.Result.StackTrace)
                 ? ""
                 : string.Format("{0}", TestContext.CurrentContext.Result.StackTrace);
-            var errorMessage = TestContext.CurrentContext.Result.Message;
+            var message = TestContext.CurrentContext.Result.Message;
 
-            switch (status)
+            Status logstatus = status switch
             {
-                case TestStatus.Failed:
-                    // Capture screenshot on failure
-                    test.Fail("Test Failed", CaptureScreenshot(driver.Value!, fileName))
-                        .Log(Status.Fail, errorMessage)
-                        .Log(Status.Fail, stacktrace);
+                TestStatus.Failed => Status.Fail,
+                TestStatus.Passed => Status.Pass,
+                TestStatus.Skipped => Status.Skip,
+                TestStatus.Inconclusive => Status.Info,
+                TestStatus.Warning => Status.Warning,
+                _ => Status.Info
+            };
 
-                    break;
-                case TestStatus.Skipped:
-                    test.Skip("Test Skipped").Log(Status.Skip, errorMessage);
-                    break;
-                case TestStatus.Passed:
-                    test.Pass("Test Passed", CaptureScreenshot(driver.Value!, fileName));
-                    break;
-                default:
-                    test.Info("Test Finished with no specific status.");
-                    break;
+            if (status is TestStatus.Passed or TestStatus.Failed)
+            {
+                string screenshot = ScreenshotHelper.CaptureScreenshot(driver.Value, test.Value.Test.FullName, logstatus);
+                test.Value.Log(logstatus, status.ToString());
+                test.Value.AddScreenCaptureFromPath(screenshot);
             }
+            
             if (driver.Value != null)
             {
                 driver.Value.Quit();
                 driver.Value.Dispose();
                 driver.Value = null!;
             }
-        }
-       
-        public Media CaptureScreenshot(IWebDriver driver, String screenshotName)
-        {
-            try
-            {
-                ITakesScreenshot ts = (ITakesScreenshot)driver;
-                var screenshot = ts.GetScreenshot().AsBase64EncodedString;
-                return MediaEntityBuilder.CreateScreenCaptureFromBase64String(screenshot, screenshotName).Build();
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error capturing screenshot: " + ex.Message);
-                return null;
-            }
-        }
+        }        
 
         [OneTimeTearDown]
         public void TearDown()

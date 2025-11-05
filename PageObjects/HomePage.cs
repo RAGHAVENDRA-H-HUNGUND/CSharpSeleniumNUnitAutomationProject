@@ -6,7 +6,7 @@ namespace CSharpSeleniumNUnitAutomationProject.PageObjects
     public class HomePage
     {
         private readonly IWebDriver driver;
-        private readonly WebDriverWait wait;
+        //private readonly WebDriverWait wait;
 
         private IWebElement LogoutMenu =>
         new WebDriverWait(driver, TimeSpan.FromSeconds(10))
