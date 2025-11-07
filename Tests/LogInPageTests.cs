@@ -1,12 +1,22 @@
 using CSharpSeleniumNUnitAutomationProject.PageObjects;
+using CSharpSeleniumNUnitAutomationProject.TestData;
 using CSharpSeleniumNUnitAutomationProject.Utilities;
 
 namespace CSharpSeleniumNUnitAutomationProject.Tests
 {
+    [TestFixture(BrowserType.Chrome)]
+    [TestFixture(BrowserType.Firefox)]
+    [TestFixture(BrowserType.Edge)]
+    [Parallelizable(ParallelScope.Self)]
     public class LogInPageTests:Base
     {
+        private readonly BrowserType _browser;
+        public LogInPageTests(BrowserType browser)
+        {
+            _browser = browser;
+        }
 
-        [Test]
+        [Test, Category("Smoke"), Category("Regression")]
         public void LogInTest()
         {
             LogInPage logInPage = new LogInPage(driver.Value!);
@@ -18,7 +28,7 @@ namespace CSharpSeleniumNUnitAutomationProject.Tests
             Thread.Sleep(5000);
         }
 
-        [Test]
+        [Test, Category("Sanity")]
         public void LogInWithEmptyUserNameTest()
         {
             LogInPage logInPage = new LogInPage(driver.Value!);
@@ -28,7 +38,7 @@ namespace CSharpSeleniumNUnitAutomationProject.Tests
             Assert.That(logInPage.UsernameRequiredFieldMsg.Text, Is.EqualTo(testData[2]["Expected Result"]));            
         }
 
-        [Test]
+        [Test, Category("Sanity")]
         public void LogInWithEmptyPasswordTest()
         {
             LogInPage logInPage = new LogInPage(driver.Value!);
@@ -39,7 +49,7 @@ namespace CSharpSeleniumNUnitAutomationProject.Tests
 
         }
 
-        [Test]
+        [Test, Category("Regression")]
         public void LogInWithEmptyFieldsTest()
         {
             LogInPage logInPage = new LogInPage(driver.Value!);
@@ -57,7 +67,7 @@ namespace CSharpSeleniumNUnitAutomationProject.Tests
 
         }
 
-        [Test]
+        [Test, Category("Regression")]
         public void LogInWithWrongCredentialsTest()
         {
             LogInPage logInPage = new LogInPage(driver.Value!);
